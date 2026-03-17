@@ -16,15 +16,7 @@ window.addEventListener("message", (event) => {
 });
 
 injectInterceptor();
-tryInjectWidget();
-
-new MutationObserver(() => tryInjectWidget()).observe(document.body, {
-  childList: true,
-  subtree: true,
-});
-
-// Fallback: poll for the widget in case MutationObserver misses a re-render
-setInterval(tryInjectWidget, 1000);
+setInterval(tryInjectWidget, 500);
 
 // Clear cached transcript on SPA navigation so we don't use stale data
 let lastUrl = location.href;

@@ -127,8 +127,17 @@ function createWidget(): HTMLElement {
 const WIDGET_ID = "syb-widget";
 
 export function tryInjectWidget() {
-  if (document.getElementById(WIDGET_ID)?.isConnected) return;
-  const target = document.querySelector("#top-level-buttons-computed");
-  if (!target) return;
-  target.appendChild(createWidget());
+  if (!location.pathname.startsWith("/watch")) return;
+
+  const targets = document.querySelectorAll("#top-level-buttons-computed");
+  for (const target of targets) {
+    if (target.querySelector(`#${WIDGET_ID}`)) continue;
+    if (target.children.length === 0) continue;
+    // Only inject into a visible action bar (skip hidden/stale ones)
+    const rect = target.getBoundingClientRect();
+    if (rect.width === 0 || rect.height === 0) continue;
+
+    target.appendChild(createWidget());
+    return;
+  }
 }
