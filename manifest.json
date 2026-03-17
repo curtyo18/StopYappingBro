@@ -1,0 +1,42 @@
+{
+  "manifest_version": 3,
+  "name": "StopYappingBro",
+  "version": "1.0.0",
+  "description": "Copy YouTube transcripts and summarize with ChatGPT",
+  "permissions": ["activeTab"],
+  "host_permissions": ["https://www.youtube.com/*", "https://chatgpt.com/*"],
+  "background": {
+    "service_worker": "src/background/index.ts"
+  },
+  "content_scripts": [
+    {
+      "matches": ["https://www.youtube.com/*"],
+      "js": ["src/content/index.ts"],
+      "run_at": "document_idle"
+    },
+    {
+      "matches": ["https://chatgpt.com/*"],
+      "js": ["src/chatgpt/index.ts"],
+      "run_at": "document_idle"
+    }
+  ],
+  "action": {
+    "default_popup": "src/popup/index.html",
+    "default_icon": {
+      "16": "icons/icon16.png",
+      "48": "icons/icon48.png",
+      "128": "icons/icon128.png"
+    }
+  },
+  "icons": {
+    "16": "icons/icon16.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  },
+  "web_accessible_resources": [
+    {
+      "resources": ["src/content/intercept.js"],
+      "matches": ["https://www.youtube.com/*"]
+    }
+  ]
+}

@@ -1,0 +1,35 @@
+:host {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-left: 8px;
+}
+
+button {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  border: none;
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.1);
+  color: #fff;
+  font-family: "Roboto", Arial, sans-serif;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.2s;
+}
+
+button:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+button.success {
+  background: #2e7d32;
+}
+
+button.error {
+  background: #c62828;
+}
