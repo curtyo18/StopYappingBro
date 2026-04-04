@@ -21,3 +21,41 @@ p {
   font-size: 13px;
   line-height: 1.5;
 }
+
+.prompt-editor {
+  margin-top: 1.5rem;
+  padding-top: 1rem;
+  border-top: 1px solid #ccc;
+}
+
+.prompt-editor label {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-weight: bold;
+  font-size: 0.9rem;
+}
+
+.prompt-editor textarea {
+  width: 100%;
+  padding: 0.5rem;
+  font-family: monospace;
+  font-size: 0.85rem;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  resize: vertical;
+  box-sizing: border-box;
+}
+
+.prompt-editor button {
+  margin-top: 0.5rem;
+  padding: 0.4rem 0.8rem;
+  font-size: 0.85rem;
+  background-color: #f0f0f0;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.prompt-editor button:hover {
+  background-color: #e0e0e0;
+}
