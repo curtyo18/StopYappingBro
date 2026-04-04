@@ -12,15 +12,15 @@ export async function getCustomPrompt(): Promise<string> {
 export async function setCustomPrompt(prompt: string): Promise<void> {
   try {
     await chrome.storage.local.set({ customPrompt: prompt });
-  } catch (error) {
-    console.error("Failed to save prompt:", error);
+  } catch {
+    console.error("Failed to save prompt:");
   }
 }
 
 export async function resetCustomPrompt(): Promise<void> {
   try {
     await chrome.storage.local.remove("customPrompt");
-  } catch (error) {
-    console.error("Failed to reset prompt:", error);
+  } catch {
+    console.error("Failed to reset prompt:");
   }
 }
