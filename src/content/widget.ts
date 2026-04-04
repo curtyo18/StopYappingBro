@@ -1,5 +1,6 @@
 import css from "./widget.css?inline";
 import { extractTranscript } from "./transcript";
+import { getCustomPrompt } from "../common/storage";
 
 let cachedTranscript: string | null = null;
 let transcriptResolve: ((text: string) => void) | null = null;
@@ -110,7 +111,8 @@ function createWidget(): HTMLElement {
   summarizeBtn.addEventListener("click", async () => {
     try {
       const text = await getTranscript();
-      const prompt = "Summarize this YouTube transcript extremely concisely:\n\n" + text;
+      const customPrompt = await getCustomPrompt();
+      const prompt = customPrompt + text;
       chrome.runtime.sendMessage({ type: "openChatGPT", prompt });
       flashButton(summarizeBtn, "Sent!", "success");
     } catch {
