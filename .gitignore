@@ -2,5 +2,7 @@ node_modules/
 dist/
 *.zip
 .claude/
+.worktrees/
+CLAUDE.md
 .DS_Store
 Thumbs.db
