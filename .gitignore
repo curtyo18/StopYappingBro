@@ -6,3 +6,12 @@ dist/
 CLAUDE.md
 .DS_Store
 Thumbs.db
+
+# tooling
+coverage/
+test-results/
+playwright-report/
+
+# internal AI-planning docs — not for publication.
+# only the superpowers subdir is ignored so a real docs/ can be added later.
+docs/superpowers/

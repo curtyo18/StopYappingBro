@@ -1,15 +1,7 @@
 const originalFetch = window.fetch;
 
-window.fetch = async function (
-  input: RequestInfo | URL,
-  init?: RequestInit,
-): Promise<Response> {
-  const url =
-    typeof input === "string"
-      ? input
-      : input instanceof URL
-        ? input.href
-        : input.url;
+window.fetch = async function (input: RequestInfo | URL, init?: RequestInit): Promise<Response> {
+  const url = typeof input === "string" ? input : input instanceof URL ? input.href : input.url;
 
   const response = await originalFetch.call(window, input, init);
 

@@ -39,7 +39,7 @@ function waitForTranscript(timeout = 8000): Promise<string> {
 
 function clickShowTranscript(): boolean {
   const btn = document.querySelector<HTMLElement>(
-    "ytd-video-description-transcript-section-renderer button"
+    "ytd-video-description-transcript-section-renderer button",
   );
   if (btn) {
     btn.click();
@@ -47,7 +47,7 @@ function clickShowTranscript(): boolean {
   }
 
   const spans = document.querySelectorAll<HTMLElement>(
-    "button yt-formatted-string, button span.yt-core-attributed-string"
+    "button yt-formatted-string, button span.yt-core-attributed-string",
   );
   for (const span of spans) {
     if (span.textContent?.trim().toLowerCase() === "show transcript") {

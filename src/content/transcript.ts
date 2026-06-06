@@ -29,7 +29,11 @@ function walk(node: unknown, out: string[], insideNoResult: boolean): void {
     const snippet = renderer.snippet as Record<string, unknown> | undefined;
     if (snippet && Array.isArray(snippet.runs)) {
       for (const run of snippet.runs) {
-        if (run && typeof run === "object" && typeof (run as Record<string, unknown>).text === "string") {
+        if (
+          run &&
+          typeof run === "object" &&
+          typeof (run as Record<string, unknown>).text === "string"
+        ) {
           out.push((run as Record<string, unknown>).text as string);
         }
       }
