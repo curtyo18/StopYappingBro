@@ -12,6 +12,20 @@ function flashButton(btn: HTMLButtonElement, text: string, cls: string) {
   }, 1500);
 }
 
+// YouTube's SPA leaves stale, hidden/empty #top-level-buttons-computed nodes in
+// the DOM; pick the first one that is actually rendered (visible + non-empty),
+// matching the original widget's injection-target selection. querySelector's
+// plain first-match (what WXT's string anchor used) can land on a hidden one.
+function visibleActionBar(): HTMLElement | undefined {
+  for (const bar of document.querySelectorAll<HTMLElement>("#top-level-buttons-computed")) {
+    if (bar.children.length === 0) continue;
+    const rect = bar.getBoundingClientRect();
+    if (rect.width === 0 || rect.height === 0) continue;
+    return bar;
+  }
+  return undefined;
+}
+
 export default defineContentScript({
   matches: ["https://www.youtube.com/*"],
   runAt: "document_idle",
@@ -28,7 +42,7 @@ export default defineContentScript({
       name: "syb-widget",
       position: "inline",
       inheritStyles: true,
-      anchor: "#top-level-buttons-computed",
+      anchor: visibleActionBar,
       append: "last",
       onMount(container) {
         const copyBtn = document.createElement("button");
@@ -63,7 +77,28 @@ export default defineContentScript({
         container.appendChild(summarizeBtn);
       },
     });
-    ui.autoMount();
+
+    // Resilient injection — replaces ui.autoMount(). YouTube frequently rebuilds
+    // the action bar's children on SPA navigation WITHOUT removing the container
+    // element, which autoMount's element-presence observer never sees, so the
+    // widget silently fails to re-appear. Re-assert placement on a short interval
+    // (mirrors the original setInterval(tryInjectWidget, 500)): build once into
+    // the first visible action bar, then re-home the host whenever YouTube wipes
+    // or swaps that bar.
+    let built = false;
+    const ensureInjected = () => {
+      const bar = visibleActionBar();
+      if (!bar) return;
+      if (!built) {
+        ui.mount();
+        built = true;
+      } else if (ui.shadowHost.parentElement !== bar) {
+        bar.appendChild(ui.shadowHost);
+      }
+    };
+    ensureInjected();
+    const injectTimer = setInterval(ensureInjected, 500);
+    ctx.onInvalidated(() => clearInterval(injectTimer));
 
     let lastUrl = location.href;
     document.addEventListener("yt-navigate-finish", () => {
