@@ -1,7 +1,6 @@
 {
   "manifest_version": 3,
   "name": "StopYappingBro",
-  "version": "1.2.0",
   "description": "Copy YouTube transcripts and summarize with ChatGPT",
   "permissions": ["activeTab", "storage"],
   "host_permissions": ["https://www.youtube.com/*", "https://chatgpt.com/*"],
