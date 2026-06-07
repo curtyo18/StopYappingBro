@@ -3,6 +3,22 @@
   align-items: center;
   gap: 8px;
   margin-left: 8px;
+
+  /* Button palette. Defaults to YouTube's dark theme (white text on a faint
+     light film). The light override below flips it to dark-on-light so the
+     buttons stay readable when the user has YouTube in light mode — keyed off
+     YouTube's own theme (<html dark>), not prefers-color-scheme. Driven through
+     custom properties so the success/error states can override colour without a
+     specificity fight with the theme rule. */
+  --syb-btn-bg: rgba(255, 255, 255, 0.1);
+  --syb-btn-bg-hover: rgba(255, 255, 255, 0.2);
+  --syb-btn-fg: #fff;
+}
+
+:host-context(html:not([dark])) {
+  --syb-btn-bg: rgba(0, 0, 0, 0.05);
+  --syb-btn-bg-hover: rgba(0, 0, 0, 0.1);
+  --syb-btn-fg: #0f0f0f;
 }
 
 /* WXT's createShadowRootUi wraps the mounted content in <html><body>; collapse
@@ -20,8 +36,8 @@ button {
   padding: 8px 16px;
   border: none;
   border-radius: 18px;
-  background: rgba(255, 255, 255, 0.1);
-  color: #fff;
+  background: var(--syb-btn-bg);
+  color: var(--syb-btn-fg);
   font-family: "Roboto", Arial, sans-serif;
   font-size: 14px;
   font-weight: 500;
@@ -31,13 +47,15 @@ button {
 }
 
 button:hover {
-  background: rgba(255, 255, 255, 0.2);
+  background: var(--syb-btn-bg-hover);
 }
 
 button.success {
   background: #2e7d32;
+  color: #fff;
 }
 
 button.error {
   background: #c62828;
+  color: #fff;
 }
