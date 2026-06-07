@@ -4,7 +4,7 @@ import {
   setCustomPrompt,
   resetCustomPrompt,
   DEFAULT_PROMPT,
-} from "../common/storage";
+} from "@/common/storage";
 
 export function App() {
   const [prompt, setPrompt] = useState(DEFAULT_PROMPT);

@@ -5,6 +5,14 @@
   margin-left: 8px;
 }
 
+/* WXT's createShadowRootUi wraps the mounted content in <html><body>; collapse
+   them with display:contents so the buttons stay direct flex children of :host
+   (preserving the original row layout) and inherit no UA <body> margin. */
+html,
+body {
+  display: contents;
+}
+
 button {
   display: inline-flex;
   align-items: center;

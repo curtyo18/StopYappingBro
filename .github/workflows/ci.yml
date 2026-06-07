@@ -13,14 +13,17 @@ jobs:
   test:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
         with:
-          node-version: '20'
+          node-version: '22'
           cache: 'npm'
-      # Node 20 ships npm 10.x; the .npmrc relies on min-release-age (npm 11.10+).
+      # Node 22 ships npm 10.x; the .npmrc relies on min-release-age (npm 11.10+).
       - run: npm install -g npm@latest
       - run: npm ci
+      # .npmrc sets ignore-scripts, so postinstall (wxt prepare) doesn't run on
+      # npm ci — generate .wxt/ explicitly before typecheck/build/test.
+      - run: npx wxt prepare
       - run: npm run typecheck
       - run: npm run lint
       - run: npm run build
