@@ -81,20 +81,20 @@ The custom summarization prompt is stored in `chrome.storage.local` on your own 
 
 ## Development
 
-Requires Node 20+ and **npm 11.10 or newer** — the repo's `.npmrc` uses [`min-release-age`](https://docs.npmjs.com/cli/v11/using-npm/config#min-release-age) (and other supply-chain hardening defaults) which silently no-ops on older npm. If you're on the npm that ships with Node 20 (10.x), upgrade with `npm install -g npm@latest`.
+Requires Node 22+ and **npm 11.10 or newer** — the repo's `.npmrc` uses [`min-release-age`](https://docs.npmjs.com/cli/v11/using-npm/config#min-release-age) (and other supply-chain hardening defaults) which silently no-ops on older npm. If you're on the npm that ships with Node 22 (10.x), upgrade with `npm install -g npm@latest`.
 
 ```bash
 npm install
 npm run icons       # generate icons from src/icons/icon.svg
-npm run dev         # vite watch build into dist/
-npm run build       # production build into dist/
+npm run dev         # WXT dev (HMR) → .output/chrome-mv3
+npm run build       # production build → .output/chrome-mv3
 npm run typecheck   # tsc on src + tests
 npm run lint        # prettier --check
 npm test            # vitest unit tests
-npm run package     # build + zip dist/ for Chrome Web Store upload
+npm run zip         # build + zip → .output/<name>-<version>-chrome.zip
 ```
 
-Load the built `dist/` via `chrome://extensions` → "Load unpacked" while iterating.
+Load the built `.output/chrome-mv3` via `chrome://extensions` → "Load unpacked" while iterating. Releases are cut by CI on tag push — see the release workflow.
 
 ### Supply-chain hardening
 

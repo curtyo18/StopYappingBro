@@ -10,7 +10,6 @@
     "build": "wxt build",
     "zip": "wxt zip",
     "postinstall": "wxt prepare",
-    "package": "wxt zip",
     "test": "vitest run",
     "test:watch": "vitest",
     "lint": "prettier --check \"src/**/*.{ts,tsx}\" \"tests/**/*.ts\"",
