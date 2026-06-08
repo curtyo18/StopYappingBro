@@ -38,18 +38,31 @@ jobs:
           fi
       # wxt zip builds and packages to .output/<name>-<version>-chrome.zip, with
       # the version auto-stamped from package.json (the tag==version guard above
-      # already ensures the tag and the packaged version agree).
+      # already ensures the tag and the packaged version agree). This flat archive
+      # (manifest.json at the root) is the Chrome Web Store upload format.
       - run: npm run zip
-      - name: Publish release with the packaged extension
+      # Also fold the build into a folder named after the repo, so users can
+      # download, extract, and "Load unpacked" the resulting <repo>/ directory.
+      - name: Package as a repo-named folder (unpacked-install zip)
+        run: |
+          name="${GITHUB_REPOSITORY##*/}"
+          ver="$(node -p "require('./package.json').version")"
+          mkdir -p .output/pack
+          rm -rf ".output/pack/$name"
+          cp -r .output/chrome-mv3 ".output/pack/$name"
+          ( cd .output/pack && zip -r "$GITHUB_WORKSPACE/${name}-${ver}.zip" "$name" )
+      - name: Publish release with both artifacts
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
           tag="$GITHUB_REF_NAME"
-          zip=$(ls .output/*-chrome.zip | head -n1)
-          # Idempotent: attach (replacing) the zip if the release already exists
-          # — e.g. a re-run — otherwise create it with auto-generated notes.
+          name="${GITHUB_REPOSITORY##*/}"
+          ver="$(node -p "require('./package.json').version")"
+          store=$(ls .output/*-chrome.zip | head -n1)
+          # Idempotent: attach (replacing) the assets if the release already
+          # exists — e.g. a re-run — otherwise create it with auto-generated notes.
           if gh release view "$tag" >/dev/null 2>&1; then
-            gh release upload "$tag" "$zip" --clobber
+            gh release upload "$tag" "${name}-${ver}.zip" "$store" --clobber
           else
-            gh release create "$tag" "$zip" --title "$tag" --generate-notes
+            gh release create "$tag" "${name}-${ver}.zip" "$store" --title "$tag" --generate-notes
           fi
