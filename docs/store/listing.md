@@ -153,7 +153,7 @@ See single-purpose description above.
 
 ## Submission checklist (SYB)
 
-- [x] MV3 package built at current version (1.2.3) — `.output/stop-yapping-bro-1.2.3-chrome.zip`
+- [x] MV3 package built at current version (1.2.4) — `.output/stop-yapping-bro-1.2.4-chrome.zip` (also on the v1.2.4 GitHub release)
 - [x] Privacy policy hosted — Pages enabled (confirm renders in browser)
 - [x] 128×128 icon present
 - [x] ≥1 screenshot (`docs/screenshot.png`, 640×400) — optional extras recommended
