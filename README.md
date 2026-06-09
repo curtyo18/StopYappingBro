@@ -2,6 +2,8 @@
 
 Chrome extension that grabs a YouTube video's transcript and hands it to ChatGPT for a concise summary — so you can get the gist without sitting through the yapping.
 
+![StopYappingBro's Copy Transcript and Summarize buttons on a YouTube watch page](docs/screenshot.png)
+
 ## What it's for
 
 - Summarizing long YouTube videos (lectures, talks, podcasts, reviews) in seconds

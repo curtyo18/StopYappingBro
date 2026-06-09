@@ -70,12 +70,16 @@ with ChatGPT" also works and is safely under the limit.)*
 >
 > Open source — code and privacy policy linked below.
 
-## Screenshots — TODO (manual, ≥1 required; 1280×800 or 640×400)
+## Screenshots (≥1 required; 1280×800 or 640×400)
 
-Capture on a real YouTube watch page (scrub anything personal first):
-1. The two buttons (Copy Transcript / Summarize) in the YouTube action bar.
-2. The popup with the editable summarization prompt.
-3. The resulting ChatGPT tab with the transcript prefilled + summary. *(optional)*
+- **Present:** `docs/screenshot.png` (640×400, 24-bit, no alpha) — the Copy
+  Transcript / Summarize buttons in the YouTube action bar. Submittable as-is.
+- **Recommended extras** (scrub anything personal first):
+  the popup with the editable summarization prompt; the resulting ChatGPT tab with
+  the transcript prefilled + summary.
+
+Note: all screenshots in one listing should share the same dimensions, so any
+extras should also be 640×400 to match.
 
 Store icon 128×128 is already present (`public/icons/icon128.png`).
 
@@ -152,7 +156,7 @@ See single-purpose description above.
 - [x] MV3 package built at current version (1.2.3) — `.output/stop-yapping-bro-1.2.3-chrome.zip`
 - [x] Privacy policy hosted — Pages enabled (confirm renders in browser)
 - [x] 128×128 icon present
-- [ ] ≥1 screenshot (manual — see above)
+- [x] ≥1 screenshot (`docs/screenshot.png`, 640×400) — optional extras recommended
 - [ ] CWS developer account + $5 fee + 2-Step Verification + verified contact email (user)
 - [ ] Category / language / visibility set in dashboard
 - [ ] Paste summary, detailed description, single-purpose, permission
