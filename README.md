@@ -77,7 +77,7 @@ The extension requests the minimum it needs:
 - Host access to `https://www.youtube.com/*` — inject the transcript interceptor and the on-page buttons.
 - Host access to `https://chatgpt.com/*` — fill the ChatGPT composer with the transcript and submit.
 
-The extension makes **no network requests of its own** and sends no data to any third party. The transcript only ever goes to the ChatGPT tab you open. See `docs/permissions-justification.md` for the per-permission Web Store narrative and `docs/privacy.html` for the privacy policy.
+The extension makes **no network requests of its own** and sends no data to any third party. The transcript only ever goes to the ChatGPT tab you open. See `docs/privacy.html` for the privacy policy and `docs/store/listing.md` for the full Chrome Web Store submission pack (dashboard copy and permission justifications).
 
 ## Storage
 
