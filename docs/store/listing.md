@@ -98,12 +98,6 @@ See single-purpose description above.
 
 ### Permission justifications
 
-**`activeTab`**
-> StopYappingBro acts on the YouTube tab the user is actively viewing when they
-> click "Copy Transcript" or "Summarize". activeTab grants that interaction scoped
-> to a user gesture, avoiding broad, always-on tab access. Without it the
-> extension cannot read the transcript of the video the user is currently watching.
-
 **`storage`**
 > Stores a single user setting — a custom summarization prompt — in
 > chrome.storage.local so it persists across browser sessions. Without it the
@@ -146,14 +140,14 @@ See single-purpose description above.
 > relays them to the isolated-world widget via `window.postMessage`. It never
 > modifies, blocks, or redirects requests, and fetches nothing remotely — there is
 > no remotely hosted code. The only web-accessible resource is the widget's CSS.
-> Permissions are minimal (activeTab + storage, host access limited to youtube.com
+> Permissions are minimal (storage only, host access limited to youtube.com
 > and chatgpt.com). No `<all_urls>`, no debugger, no webRequest.
 
 ---
 
 ## Submission checklist (SYB)
 
-- [x] MV3 package built at current version (1.2.4) — `.output/stop-yapping-bro-1.2.4-chrome.zip` (also on the v1.2.4 GitHub release)
+- [x] MV3 package built at current version (1.2.5) — `.output/stop-yapping-bro-1.2.5-chrome.zip` (also on the v1.2.5 GitHub release)
 - [x] Privacy policy hosted — Pages enabled (confirm renders in browser)
 - [x] 128×128 icon present
 - [x] ≥1 screenshot (`docs/screenshot.png`, 640×400) — optional extras recommended
