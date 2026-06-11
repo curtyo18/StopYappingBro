@@ -8,7 +8,7 @@ export default defineConfig({
   manifest: {
     name: 'StopYappingBro',
     description: 'Copy YouTube transcripts and summarize with ChatGPT',
-    permissions: ['activeTab', 'storage'],
+    permissions: ['storage'],
     host_permissions: ['https://www.youtube.com/*', 'https://chatgpt.com/*'],
     icons: {
       16: 'icons/icon16.png',
