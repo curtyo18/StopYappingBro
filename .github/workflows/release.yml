@@ -1,25 +1,61 @@
 name: Release
 
-# Fires when a vX.Y.Z tag is pushed. Builds, packages, and publishes the
-# GitHub release with the extension zip attached — so the artifact can never be
-# forgotten the way a manual `gh release create` can.
+# Builds, packages, and publishes the GitHub release with the extension zip
+# attached — so the artifact can never be forgotten the way a manual
+# `gh release create` can. Fires either way a new version lands:
+#   - push to main whose package.json version has no vX.Y.Z tag yet → tags it
+#     (bump in a PR, merge, done)
+#   - a pushed vX.Y.Z tag (`npm version patch && git push --follow-tags`)
 on:
   push:
+    branches: [main]
     tags: ['v*']
 
 # Least privilege: the job needs write only to create the release and upload assets.
 permissions:
   contents: write
 
+# One global queue: `git push --follow-tags` fires both a main and a tag run;
+# serialising them means the second sees the first's tag/release and no-ops.
 concurrency:
-  group: release-${{ github.ref }}
+  group: release
   cancel-in-progress: false
 
 jobs:
-  release:
+  # Decide which tag (if any) this run releases. Tags pushed here with
+  # GITHUB_TOKEN don't trigger another workflow run, so the release job below
+  # runs in this same run instead.
+  tag:
     runs-on: ubuntu-latest
+    outputs:
+      tag: ${{ steps.decide.outputs.tag }}
     steps:
       - uses: actions/checkout@v6
+      - id: decide
+        run: |
+          if [ "$GITHUB_REF_TYPE" = "tag" ]; then
+            echo "tag=$GITHUB_REF_NAME" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          tag="v$(node -p "require('./package.json').version")"
+          if git ls-remote --exit-code --tags origin "refs/tags/$tag" >/dev/null; then
+            echo "$tag already exists; nothing to release."
+            exit 0
+          fi
+          git tag "$tag" "$GITHUB_SHA"
+          git push origin "refs/tags/$tag"
+          echo "tag=$tag" >> "$GITHUB_OUTPUT"
+
+  release:
+    needs: tag
+    if: needs.tag.outputs.tag != ''
+    runs-on: ubuntu-latest
+    env:
+      TAG: ${{ needs.tag.outputs.tag }}
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          ref: ${{ needs.tag.outputs.tag }}
       - uses: actions/setup-node@v6
         with:
           node-version: '22'
@@ -32,8 +68,8 @@ jobs:
       - name: Check tag matches package.json version
         run: |
           ver="v$(node -p "require('./package.json').version")"
-          if [ "$ver" != "$GITHUB_REF_NAME" ]; then
-            echo "::error::tag $GITHUB_REF_NAME does not match package.json ($ver)"
+          if [ "$ver" != "$TAG" ]; then
+            echo "::error::tag $TAG does not match package.json ($ver)"
             exit 1
           fi
       # wxt zip builds and packages to .output/<name>-<version>-chrome.zip, with
@@ -55,7 +91,7 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          tag="$GITHUB_REF_NAME"
+          tag="$TAG"
           name="${GITHUB_REPOSITORY##*/}"
           ver="$(node -p "require('./package.json').version")"
           store=$(ls .output/*-chrome.zip | head -n1)
