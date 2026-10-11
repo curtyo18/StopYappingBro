@@ -1,4 +1,4 @@
-import { fillInput, submit, waitForInput } from "@/content/composer";
+import { sendPrompt } from "@/content/composer";
 
 export default defineContentScript({
   matches: ["https://chatgpt.com/*"],
@@ -8,14 +8,9 @@ export default defineContentScript({
       const { prompt } = await chrome.runtime.sendMessage({ type: "getPrompt" });
       if (!prompt) return;
 
-      const input = await waitForInput();
-      if (!input) {
-        console.warn("[StopYappingBro] ChatGPT composer not found");
-        return;
+      if (!(await sendPrompt(prompt))) {
+        console.warn("[StopYappingBro] Couldn't fill the ChatGPT composer");
       }
-
-      fillInput(input, prompt);
-      await submit(input);
     }
 
     fillPrompt();

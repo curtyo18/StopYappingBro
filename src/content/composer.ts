@@ -67,6 +67,13 @@ export function scoreInput(el: HTMLElement): number | null {
 
 /** The most composer-like editable on the page, or null if nothing qualifies. */
 export function findInput(root: ParentNode = document): HTMLElement | null {
+  // Fast path: a known selector that still points at a usable composer.
+  for (const sel of KNOWN_INPUT_SELECTORS) {
+    for (const el of root.querySelectorAll<HTMLElement>(sel)) {
+      if (scoreInput(el) !== null) return el;
+    }
+  }
+
   let best: HTMLElement | null = null;
   let bestScore = MIN_SCORE - 1;
   for (const el of root.querySelectorAll<HTMLElement>(CANDIDATES)) {
@@ -79,21 +86,8 @@ export function findInput(root: ParentNode = document): HTMLElement | null {
   return best;
 }
 
-/**
- * Wait for the composer and for the page to stop swapping it out: ChatGPT
- * hydrates late and often re-mounts the composer, detaching the first match.
- */
-export async function waitForInput(timeout = 30000, settleMs = 400): Promise<HTMLElement | null> {
-  const deadline = Date.now() + timeout;
-  let candidate: HTMLElement | null = null;
-  while (Date.now() < deadline) {
-    candidate = await waitFor(findInput, deadline - Date.now());
-    if (!candidate) return null;
-    await new Promise((r) => setTimeout(r, settleMs));
-    const current = findInput();
-    if (current === candidate) return current;
-  }
-  return candidate?.isConnected ? candidate : findInput();
+export function waitForInput(timeout = 30000): Promise<HTMLElement | null> {
+  return waitFor(findInput, timeout);
 }
 
 export const SUBMIT_SELECTORS = [
@@ -114,28 +108,48 @@ export function findFirst<T extends Element>(
   return null;
 }
 
+// Standard HTML/ARIA "can't click this" attributes; watching them makes the
+// send button's enable instant without depending on ChatGPT's markup.
+const STATE_ATTRIBUTES = ["disabled", "aria-disabled"];
+// Mutation bursts (ChatGPT hydration fires thousands) collapse into one check.
+const COALESCE_MS = 16;
+// Backstop for changes that aren't DOM mutations (e.g. CSS-driven visibility).
+const POLL_MS = 250;
+
 export function waitFor<T>(find: () => T | null, timeout = 10000): Promise<T | null> {
   return new Promise((resolve) => {
     const initial = find();
     if (initial) return resolve(initial);
 
+    let settled = false;
+    let scheduled: ReturnType<typeof setTimeout> | undefined;
     const done = (v: T | null) => {
+      settled = true;
       clearTimeout(timer);
+      clearTimeout(scheduled);
       clearInterval(poll);
       obs.disconnect();
       resolve(v);
     };
     const check = () => {
+      scheduled = undefined;
+      if (settled) return;
       const found = find();
       if (found) done(found);
     };
+    const schedule = () => {
+      scheduled ??= setTimeout(check, COALESCE_MS);
+    };
 
     const timer = setTimeout(() => done(null), timeout);
-    // Polling catches attribute-only changes (e.g. disabled → enabled) the
-    // childList observer misses.
-    const poll = setInterval(check, 100);
-    const obs = new MutationObserver(check);
-    obs.observe(document.body, { childList: true, subtree: true });
+    const poll = setInterval(check, POLL_MS);
+    const obs = new MutationObserver(schedule);
+    obs.observe(document.body, {
+      childList: true,
+      subtree: true,
+      attributes: true,
+      attributeFilter: STATE_ATTRIBUTES,
+    });
   });
 }
 
@@ -171,19 +185,12 @@ function isEnabled(btn: HTMLButtonElement): boolean {
   return !btn.disabled && btn.getAttribute("aria-disabled") !== "true";
 }
 
-/** Click the send button once it's enabled; fall back to pressing Enter. */
-export async function submit(input: HTMLElement, timeout = 5000): Promise<void> {
-  const form = input.closest("form");
-  const btn = await waitFor(() => {
-    const b = findFirst<HTMLButtonElement>(SUBMIT_SELECTORS, form ?? document);
-    return b && isEnabled(b) ? b : null;
-  }, timeout);
+function findSendButton(input: HTMLElement): HTMLButtonElement | null {
+  const b = findFirst<HTMLButtonElement>(SUBMIT_SELECTORS, input.closest("form") ?? document);
+  return b && isEnabled(b) ? b : null;
+}
 
-  if (btn) {
-    btn.click();
-    return;
-  }
-
+function pressEnter(input: HTMLElement): void {
   input.focus();
   input.dispatchEvent(
     new KeyboardEvent("keydown", {
@@ -194,4 +201,32 @@ export async function submit(input: HTMLElement, timeout = 5000): Promise<void> 
       cancelable: true,
     }),
   );
+}
+
+/**
+ * Fill the composer and send. ChatGPT hydrates late and can re-mount the
+ * composer after we've filled it; instead of pausing for the page to settle,
+ * notice the swap (our input detaches before send enables) and refill the new
+ * one. Returns false if no composer was found or it kept being replaced.
+ */
+export async function sendPrompt(
+  text: string,
+  { findTimeout = 30000, sendTimeout = 5000, attempts = 3 } = {},
+): Promise<boolean> {
+  for (let i = 0; i < attempts; i++) {
+    const input = await waitForInput(findTimeout);
+    if (!input) return false;
+
+    fillInput(input, text);
+    const ready = await waitFor<HTMLButtonElement | "remounted">(
+      () => (input.isConnected ? findSendButton(input) : "remounted"),
+      sendTimeout,
+    );
+    if (ready === "remounted") continue;
+
+    if (ready) ready.click();
+    else pressEnter(input);
+    return true;
+  }
+  return false;
 }

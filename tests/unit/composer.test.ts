@@ -1,7 +1,13 @@
 import { readFileSync } from "node:fs";
 import path from "node:path";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { fillInput, findInput, submit, waitForInput } from "@/content/composer";
+import {
+  KNOWN_INPUT_SELECTORS,
+  fillInput,
+  findInput,
+  sendPrompt,
+  waitForInput,
+} from "@/content/composer";
 
 // chatgpt.com 2026-10 composer, trimmed of icons/styling (no #prompt-textarea,
 // no send button until text is typed).
@@ -96,6 +102,13 @@ describe("findInput", () => {
     expect(findInput()).toBeNull();
   });
 
+  it("takes the known-selector fast path without scanning every editable", () => {
+    document.body.innerHTML = CURRENT_UI;
+    const spy = vi.spyOn(document, "querySelectorAll");
+    expect(findInput()).not.toBeNull();
+    expect(spy.mock.calls.every(([sel]) => KNOWN_INPUT_SELECTORS.includes(sel))).toBe(true);
+  });
+
   it("returns null for a lone stray editable with no composer signals", () => {
     document.body.innerHTML = `<div data-rect="80,20,10"><div contenteditable="true"></div></div>`;
     expect(findInput()).toBeNull();
@@ -105,20 +118,18 @@ describe("findInput", () => {
 describe("waitForInput", () => {
   it("waits for a composer that renders late", async () => {
     setTimeout(() => (document.body.innerHTML = CURRENT_UI), 50);
-    expect((await waitForInput(2000, 50))?.getAttribute("aria-label")).toBe("Ask ChatGPT");
+    expect((await waitForInput(2000))?.getAttribute("aria-label")).toBe("Ask ChatGPT");
   });
 
-  it("returns the remounted composer, not the detached first one", async () => {
+  it("returns immediately when the composer is already there", async () => {
     document.body.innerHTML = CURRENT_UI;
-    const first = findInput();
-    setTimeout(() => (document.body.innerHTML = CURRENT_UI), 20);
-    const found = await waitForInput(2000, 100);
-    expect(found).not.toBe(first);
-    expect(found?.isConnected).toBe(true);
+    const start = performance.now();
+    await waitForInput(2000);
+    expect(performance.now() - start).toBeLessThan(20);
   });
 
   it("gives up with null when nothing qualifies", async () => {
-    expect(await waitForInput(150, 20)).toBeNull();
+    expect(await waitForInput(150)).toBeNull();
   });
 });
 
@@ -141,18 +152,45 @@ describe("fillInput", () => {
   });
 });
 
-describe("submit", () => {
-  it("clicks the send button once it appears", async () => {
+function addSendButton(form: Element, onClick: () => void, disabled = false) {
+  const btn = document.createElement("button");
+  btn.setAttribute("data-testid", "send-button");
+  btn.disabled = disabled;
+  btn.addEventListener("click", onClick);
+  form.appendChild(btn);
+  return btn;
+}
+
+describe("sendPrompt", () => {
+  it("fills the composer and clicks the send button once it appears", async () => {
     document.body.innerHTML = CURRENT_UI;
-    const input = findInput()!;
+    const click = vi.fn();
+    setTimeout(() => addSendButton(document.querySelector("form")!, click), 50);
+    expect(await sendPrompt("summarize this", { sendTimeout: 1000 })).toBe(true);
+    expect(findInput()?.textContent).toContain("summarize this");
+    expect(click).toHaveBeenCalledOnce();
+  });
+
+  it("clicks as soon as a disabled send button is enabled, without waiting for the poll", async () => {
+    document.body.innerHTML = CURRENT_UI;
+    const click = vi.fn();
+    const btn = addSendButton(document.querySelector("form")!, click, true);
+    setTimeout(() => (btn.disabled = false), 30);
+    const start = performance.now();
+    await sendPrompt("summarize this", { sendTimeout: 1000 });
+    expect(click).toHaveBeenCalledOnce();
+    expect(performance.now() - start).toBeLessThan(200); // poll backstop is 250ms
+  });
+
+  it("refills the new composer when ChatGPT re-mounts it after filling", async () => {
+    document.body.innerHTML = CURRENT_UI;
     const click = vi.fn();
     setTimeout(() => {
-      const btn = document.createElement("button");
-      btn.setAttribute("data-testid", "send-button");
-      btn.addEventListener("click", click);
-      input.closest("form")!.appendChild(btn);
-    }, 50);
-    await submit(input, 1000);
+      document.body.innerHTML = CURRENT_UI;
+      setTimeout(() => addSendButton(document.querySelector("form")!, click), 40);
+    }, 20);
+    expect(await sendPrompt("summarize this", { sendTimeout: 1000 })).toBe(true);
+    expect(findInput()?.textContent).toContain("summarize this");
     expect(click).toHaveBeenCalledOnce();
   });
 
@@ -161,7 +199,11 @@ describe("submit", () => {
     const input = findInput()!;
     const keys: string[] = [];
     input.addEventListener("keydown", (e) => keys.push(e.key));
-    await submit(input, 150);
+    expect(await sendPrompt("summarize this", { sendTimeout: 150 })).toBe(true);
     expect(keys).toEqual(["Enter"]);
+  });
+
+  it("returns false when no composer appears", async () => {
+    expect(await sendPrompt("summarize this", { findTimeout: 100 })).toBe(false);
   });
 });
